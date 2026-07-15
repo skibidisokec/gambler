@@ -5,6 +5,7 @@ const path = require('path');
 const DATA_FILE = path.join(__dirname, 'data.json');
 const STARTING_BALANCE = 1000;
 const TOKEN = process.env.TOKEN;
+const OWNER_ID = 'YOUR_DISCORD_USER_ID';
 
 function loadData() {
     if (!fs.existsSync(DATA_FILE)) {
@@ -20,7 +21,7 @@ function saveData(data) {
 
 function getBalance(userId) {
     const data = loadData();
-    if (!data.balances[userId]) {
+    if (data.balances[userId] === undefined) {
         data.balances[userId] = STARTING_BALANCE;
         saveData(data);
     }
@@ -154,7 +155,17 @@ client.once('ready', async () => {
             .addIntegerOption(option =>
                 option.setName('bet')
                     .setDescription('Amount to bet')
+                    .setRequired(true)),
+        new SlashCommandBuilder()
+            .setName('setbalance')
+            .setDescription('Set coin balance (owner only)')
+            .addIntegerOption(option =>
+                option.setName('amount')
+                    .setDescription('New balance amount')
                     .setRequired(true))
+            .addUserOption(option =>
+                option.setName('user')
+                    .setDescription('User to set balance for (defaults to yourself)'))
     ].map(cmd => cmd.toJSON());
 
     try {
@@ -186,6 +197,9 @@ client.on('interactionCreate', async interaction => {
         case 'blackjack':
             await handleBlackjack(interaction);
             break;
+        case 'setbalance':
+            await handleSetBalance(interaction);
+            break;
     }
 });
 
@@ -197,6 +211,28 @@ async function handleBalance(interaction) {
         .setTitle('Balance')
         .setDescription(`**${interaction.user.username}**, you have **${balance.toLocaleString()}** coins.`)
         .setFooter({ text: `Reset in: ${timeLeft}` })
+        .setTimestamp();
+    await interaction.reply({ embeds: [embed] });
+}
+
+async function handleSetBalance(interaction) {
+    if (interaction.user.id !== OWNER_ID) {
+        return interaction.reply({ content: 'Only the bot owner can use this command!', ephemeral: true });
+    }
+
+    const amount = interaction.options.getInteger('amount');
+    const target = interaction.options.getUser('user') || interaction.user;
+    const targetName = target === interaction.user ? 'Your' : `${target.username}'s`;
+
+    if (amount < 0) {
+        return interaction.reply({ content: 'Amount cannot be negative!', ephemeral: true });
+    }
+
+    setBalance(target.id, amount);
+    const embed = new EmbedBuilder()
+        .setColor(0x00ff00)
+        .setTitle('Balance Updated')
+        .setDescription(`${targetName} balance has been set to **${amount.toLocaleString()}** coins.`)
         .setTimestamp();
     await interaction.reply({ embeds: [embed] });
 }
