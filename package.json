@@ -1,0 +1,12 @@
+{
+  "name": "gambling-discord-bot",
+  "version": "1.0.0",
+  "description": "A gambling Discord bot with balance, coinflip, and blackjack",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.14.1"
+  }
+}
