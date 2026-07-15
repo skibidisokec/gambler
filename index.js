@@ -5,7 +5,7 @@ const path = require('path');
 const DATA_FILE = path.join(__dirname, 'data.json');
 const STARTING_BALANCE = 1000;
 const TOKEN = process.env.TOKEN;
-const OWNER_ID = 'YOUR_DISCORD_USER_ID';
+const OWNER_ID = '919261954420383784';
 
 function loadData() {
     if (!fs.existsSync(DATA_FILE)) {
